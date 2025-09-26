@@ -7,7 +7,7 @@ import discord
 
 from carfigures.core.models import Player, CarType, Country, Car, CarInstance, GuildConfig
 
-__version__ = "1.0"
+__version__ = "1.0.0"
 
 MIGRATIONS: dict[str, dict[str, Any]] = {
     "R": {
@@ -196,3 +196,4 @@ async def main():
 
 
 await main()  # type: ignore  # noqa: F704
+
