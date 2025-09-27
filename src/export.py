@@ -1,6 +1,7 @@
 import bz2
 import os
 import time
+import traceback
 from typing import Any
 
 import discord
@@ -111,7 +112,6 @@ MIGRATIONS: dict[str, dict[str, Any]] = {
             "tradeable": True,
             "weightBonus": 0,
             "horsepowerBonus": 0,
-            "locked": None,
         },
     },
     "P": {
@@ -202,8 +202,8 @@ async def process(entry: str, migration) -> str:
     content = []
 
     first_instance = True
-    merged_values = set(["id"]) | set(migration["values"])
-    has_defaults = hasattr(migration, "defaults")
+    merged_values = set(migration["values"]) | set(["id"])
+    has_defaults = "defaults" in migration
 
     if has_defaults:
         merged_values.update(list(migration["defaults"].keys()))
@@ -213,11 +213,27 @@ async def process(entry: str, migration) -> str:
         fields = []
 
         for key, value in model_dict.items():
-            fields.append(
-                f"{value}"
-                if not has_defaults or value != getattr(migration["defaults"], key)
-                else ""
-            )
+            if (
+                has_defaults
+                and key in migration["defaults"]
+                and value == migration["defaults"][key]
+            ):
+                fields.append("")
+                continue
+
+            value_string = str(value)
+
+            # Micro-optimizations
+            
+            if value_string == "True":
+                value_string = "🬀"  # CR
+            elif value_string == "False":
+                value_string = "🬁"  # LF
+            
+            if value_string.startswith("/static/uploads/"):
+                value_string = value_string.replace("/static/uploads/", "🬂", 1)
+
+            fields.append(value_string)
 
         if first_instance:
             content.append(f":{entry}")
@@ -244,8 +260,8 @@ async def migrate(message, filename: str) -> str | None:
         for key, migration in MIGRATIONS.items():
             try:
                 field = await process(key, migration)
-            except Exception as error:
-                print(error)
+            except Exception:
+                print(f"An error occured:\n{traceback.format_exc()}")
                 error_occured = True
                 break
 
