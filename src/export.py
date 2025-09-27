@@ -203,14 +203,16 @@ async def process(entry: str, migration) -> str:
     content = []
 
     first_instance = True
-    merged_values = set(migration["values"]) | set(["id"])
+    values = set(migration["values"] + ["id"])
     has_defaults = "defaults" in migration
 
     if has_defaults:
-        merged_values.update(list(migration["defaults"].keys()))
+        values.update(list(migration["defaults"].keys()))
 
-    async for model in migration["model"].all().order_by("id").values_list(*merged_values):
-        model_dict = dict(zip(merged_values, model))
+    values = sorted(values, key=lambda x: (x != "id", x))
+
+    async for model in migration["model"].all().order_by("id").values_list(*values):
+        model_dict = dict(zip(values, model))
         fields = []
 
         for key, value in model_dict.items():
