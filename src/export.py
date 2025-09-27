@@ -236,7 +236,7 @@ async def process(entry: str, migration) -> str:
             elif value_string.startswith("/carfigures/core/image_generator/src/"):
                 value_string = value_string.replace("/carfigures/core/image_generator/src/", "", 1)
 
-            fields.append(value_string)
+            fields.append(value_string.replace("\n", "🮈"))
 
         if first_instance:
             content.append(f":{entry}")
@@ -248,7 +248,7 @@ async def process(entry: str, migration) -> str:
         f"- Migrated **{await migration["model"].all().count():,}** {migration["process"]} objects."
     )
 
-    return "🮈".join(content)
+    return "\n".join(content)
 
 
 async def migrate(message, filename: str) -> str | None:
@@ -275,7 +275,7 @@ async def migrate(message, filename: str) -> str | None:
         if error_occured:
             return
 
-        f.write("🮈".join(content))
+        f.write("\n".join(content))
 
     return f"{filename}.bz2"
 

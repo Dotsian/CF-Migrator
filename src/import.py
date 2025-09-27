@@ -165,7 +165,7 @@ SECTIONS = {
 
 def read_bz2(path: str):
     with bz2.open(path, "rb") as bz2f:
-        return bz2f.read().decode().split("🮈")
+        return bz2f.read().splitlines()
 
 
 output = []
@@ -200,7 +200,7 @@ async def load(message):
     data = {}
 
     for index, line in enumerate(lines, start=1):
-        line = line.rstrip()
+        line = line.decode().rstrip()
 
         if line.startswith("//") or line == "":
             continue
@@ -253,6 +253,9 @@ async def load(message):
                     line_data = float(line_data)
                 elif isinstance(field_type, DatetimeField):
                     line_data = datetime.fromisoformat(cast(str, line_data))
+
+            if isinstance(line_data, str):
+                line_data.replace("🮈", "\n")
 
             model_dict[value] = line_data
 
