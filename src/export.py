@@ -108,6 +108,8 @@ MIGRATIONS: dict[str, dict[str, Any]] = {
         ],
         "defaults": {
             "trade_player_id": None,
+            "exclusive_id": None,
+            "event_id": None,
             "favorite": False,
             "tradeable": True,
             "weightBonus": 0,
@@ -224,14 +226,16 @@ async def process(entry: str, migration) -> str:
             value_string = str(value)
 
             # Micro-optimizations
-            
+
             if value_string == "True":
                 value_string = "🬀"  # CR
             elif value_string == "False":
                 value_string = "🬁"  # LF
             
             if value_string.startswith("/static/uploads/"):
-                value_string = value_string.replace("/static/uploads/", "🬂", 1)
+                value_string = value_string.replace("/static/uploads/", "", 1)
+            elif value_string.startswith("/carfigures/core/image_generator/src/"):
+                value_string = value_string.replace("/carfigures/core/image_generator/src/", "", 1)
 
             fields.append(value_string)
 
