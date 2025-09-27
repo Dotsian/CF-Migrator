@@ -281,8 +281,8 @@ async def clear_all_data():  # I'm not responsible if any of you eval goblins ru
     if models is None:
         return
 
-    await Trade.all().delete()
     await TradeObject.all().delete()
+    await Trade.all().delete()
     await BallInstance.all().delete()
 
     for model in models.values():
