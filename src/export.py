@@ -5,7 +5,21 @@ from typing import Any
 
 import discord
 
-from carfigures.core.models import Player, CarType, Country, Car, CarInstance, GuildConfig
+from carfigures.core.models import (
+    BlacklistedGuild,
+    BlacklistedUser,
+    Car,
+    CarInstance,
+    CarType,
+    Country,
+    Event,
+    Exclusive,
+    Friendship,
+    GuildConfig,
+    Player,
+    Trade,
+    TradeObject,
+)
 
 __version__ = "1.0.0"
 
@@ -25,6 +39,36 @@ MIGRATIONS: dict[str, dict[str, Any]] = {
             "name",
             "image",
         ],
+    },
+    "S-EV": {
+        "model": Event,
+        "process": "Event",
+        "values": [
+            "name",
+            "rarity",
+            "card",
+        ],
+        "defaults": {
+            "catchPhrase": None,
+            "startDate": None,
+            "endDate": None,
+            "emoji": None,
+            "tradeable": True,
+            "hidden": False,
+        },
+    },
+    "S-EX": {
+        "model": Exclusive,
+        "process": "Exclusive",
+        "values": [
+            "name",
+            "image",
+            "rarity",
+        ],
+        "defaults": {
+            "catchPhrase": None,
+            "emoji": None,
+        },
     },
     "B": {
         "model": Car,
@@ -82,6 +126,29 @@ MIGRATIONS: dict[str, dict[str, Any]] = {
         "values": ["guild_id"],
         "defaults": {"spawnChannel": None, "enabled": True},
     },
+    "F": {
+        "model": Friendship,
+        "process": "Friendship",
+        "values": ["friender_id", "friended_id", "since"],
+    },
+    "BU": {
+        "model": BlacklistedUser,
+        "process": "BlacklistedUser",
+        "values": ["discord_id"],
+        "defaults": {"reason": None, "date": None},
+    },
+    "BG": {
+        "model": BlacklistedGuild,
+        "process": "BlacklistedGuild",
+        "values": ["discord_id"],
+        "defaults": {"reason": None, "date": None},
+    },
+    "T": {"model": Trade, "process": "Trade", "values": ["player1_id", "player2_id", "date"]},
+    "TO": {
+        "model": TradeObject,
+        "process": "TradeObject",
+        "values": ["trade_id", "carinstance_id", "player_id"],
+    },
 }
 
 
@@ -113,7 +180,7 @@ def reload_embed(start_time: float | None = None, file: str | None = None, statu
         )
 
     if start_time is not None:
-        embed.set_footer(text=f"Finished migration in {round((time.time() - start_time), 3)}s")
+        embed.set_footer(text=f"Ended migration in {round((time.time() - start_time), 3)}s")
 
     return embed
 
@@ -135,7 +202,7 @@ async def process(entry: str, migration) -> str:
     content = []
 
     first_instance = True
-    merged_values = set(migration["values"])
+    merged_values = set(["id"]) | set(migration["values"])
     has_defaults = hasattr(migration, "defaults")
 
     if has_defaults:
@@ -165,16 +232,29 @@ async def process(entry: str, migration) -> str:
     return "\n".join(content)
 
 
-async def migrate(message, filename: str):
+async def migrate(message, filename: str) -> str | None:
     with bz2.open(f"{filename}.bz2", "wt", encoding="utf-8") as f:
         content = [
             f"// Generated with 'CF-Migrator' v{__version__}\n"
             "// Please do not modify this file unless you know what you're doing.\n\n"
         ]
 
+        error_occured = False
+
         for key, migration in MIGRATIONS.items():
-            content.append(await process(key, migration))
+            try:
+                field = await process(key, migration)
+            except Exception as error:
+                print(error)
+                error_occured = True
+                break
+
+            content.append(field)
+
             await message.edit(embed=reload_embed())
+
+        if error_occured:
+            return
 
         f.write("\n".join(content))
 
@@ -192,8 +272,11 @@ async def main():
 
     path = await migrate(message, "migration.txt")
 
+    if path is None:
+        await message.edit(embed=reload_embed(start_time, status="CANCELED"))
+        return
+
     await message.edit(embed=reload_embed(start_time, path, "FINISHED"))
 
 
 await main()  # type: ignore  # noqa: F704
-
