@@ -34,7 +34,7 @@ SECTIONS = {
         Special,
         [
             "id",
-            "card",
+            "background",
             "catch_phrase",
             "emoji",
             "end_date",
@@ -65,7 +65,7 @@ SECTIONS = {
             "credits",
             "regime_id",
             "catch_names",
-            "collection_picture",
+            "collection_card",
             "economy_id",
             "created_at",
             "emoji_id",
