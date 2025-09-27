@@ -5,7 +5,6 @@ import traceback
 from typing import Any
 
 import discord
-
 from carfigures.core.models import (
     BlacklistedGuild,
     BlacklistedUser,
@@ -96,6 +95,12 @@ MIGRATIONS: dict[str, dict[str, Any]] = {
             "spawnPicture": None,
         },
     },
+    "P": {
+        "model": Player,
+        "process": "Player",
+        "values": ["discord_id"],
+        "defaults": {"donationPolicy": 1, "privacyPolicy": 1},
+    },
     "BI": {
         "model": CarInstance,
         "process": "CarInstance",
@@ -115,12 +120,6 @@ MIGRATIONS: dict[str, dict[str, Any]] = {
             "weightBonus": 0,
             "horsepowerBonus": 0,
         },
-    },
-    "P": {
-        "model": Player,
-        "process": "Player",
-        "values": ["discord_id"],
-        "defaults": {"donationPolicy": 1, "privacyPolicy": 1},
     },
     "GC": {
         "model": GuildConfig,
@@ -231,7 +230,7 @@ async def process(entry: str, migration) -> str:
                 value_string = "🬀"  # CR
             elif value_string == "False":
                 value_string = "🬁"  # LF
-            
+
             if value_string.startswith("/static/uploads/"):
                 value_string = value_string.replace("/static/uploads/", "", 1)
             elif value_string.startswith("/carfigures/core/image_generator/src/"):
@@ -249,7 +248,7 @@ async def process(entry: str, migration) -> str:
         f"- Migrated **{await migration["model"].all().count():,}** {migration["process"]} objects."
     )
 
-    return "\n".join(content)
+    return "🮈".join(content)
 
 
 async def migrate(message, filename: str) -> str | None:
@@ -276,7 +275,7 @@ async def migrate(message, filename: str) -> str | None:
         if error_occured:
             return
 
-        f.write("\n".join(content))
+        f.write("🮈".join(content))
 
     return f"{filename}.bz2"
 
